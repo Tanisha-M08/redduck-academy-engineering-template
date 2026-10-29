@@ -1,37 +1,35 @@
 # Solution
 
-Answer all three problems. For each one, give your verdict, state the exact constraint in words, and
-explain your reasoning. When you claim a bypass, show how it makes the constraint irrelevant.
+## The chain as you found it
 
-## Problem 1
+The `withdraw` instruction performs the following checks in order:
 
-**Verdict:** bypass exists / no bypass
+1. **Ed25519 signature verification:** It checks whether the oracle has signed the withdrawal message. This depends on the Ed25519 instruction and its data. The caller can provide instructions in the transaction, so this check alone is not enough to prove that the correct oracle authorized the withdrawal.
 
-**The exact constraint:** State in one sentence the constraint the obvious solution accepts.
+2. **Instructions sysvar check:** It reads the transaction instructions to confirm that signature verification happened. The caller supplies the account to the program, so the program must verify that it is the real Instructions Sysvar account.
 
-**Reasoning:** Explain why the constraint is or is not intrinsic to the outcome.
+3. **Oracle allowlist check:** It checks whether the oracle's public key is allowed. This depends on the allowlist account supplied by the caller. If the program does not verify the account's identity and authority, the caller may provide a fake allowlist.
 
-**If a bypass exists, how it removes the constraint:** Describe the design, and show where the
-finished design no longer pays the constraint.
+4. **Withdrawal authorization:** It uses the results of these checks to decide whether the withdrawal can proceed. Every check must depend on trusted accounts, not just accounts supplied by the caller.
 
-## Problem 2
+## Where the chain ended
 
-**Verdict:** bypass exists / no bypass
+The whole chain depended on accounts supplied by the caller, especially the allowlist account. My exploit test used a fake account to imitate the expected account and attempted to make the program accept it as trusted.
 
-**The exact constraint:** State in one sentence the constraint the obvious solution accepts.
+This showed that checking the contents of an account is not sufficient if the program does not also verify that the account is the correct, trusted account.
 
-**Reasoning:** Explain why the constraint is or is not intrinsic to the outcome.
+## The root
 
-**If a bypass exists, how it removes the constraint:** Describe the design, and show where the
-finished design no longer pays the constraint.
+The root is the program's trusted configuration account, created and initialized through the program's authorized setup process. The caller must not be able to create an arbitrary account and have the program accept it as the real configuration.
 
-## Problem 3
+The program should verify the configuration account using a Program Derived Address (PDA) derived from a fixed seed and the program ID, and check its owner and expected data.
 
-**Verdict:** bypass exists / no bypass
+The other checks must depend on this trusted configuration. The program should use it to identify the expected allowlist, verify the correct Instructions Sysvar account, and ensure that the oracle authorization is valid. This prevents a caller from replacing trusted accounts with fake ones.
 
-**The exact constraint:** State in one sentence the constraint the obvious solution accepts.
+## One root for every instruction
 
-**Reasoning:** Explain why the constraint is or is not intrinsic to the outcome.
+Every instruction that reads the configuration must verify that it is the correct configuration account, using the same PDA derivation and validation rules.
 
-**If a bypass exists, how it removes the constraint:** Describe the design, and show where the
-finished design no longer pays the constraint.
+For example, initialization, withdrawal, and other instructions that use the configuration must verify its address, program ownership, and expected data before using it. The program must not trust a configuration account just because the caller supplied it.
+
+Using one consistently validated root of trust ensures that every instruction relies on the same trusted configuration and prevents account substitution attacks.
