@@ -2,17 +2,16 @@
 
 ## Language
 
-<!-- Keep only the language you completed. Delete the others so a single value is left, e.g. language: "python" -->
-language: "typescript" | "python" | "java" | "csharp"
+language: "python"
 
 ## Why derive the identifier from content
 
-Explain why an identifier that each party recomputes from the content is a stronger guarantee
-than a name looked up in a registry. Say what the registry would have forced someone to trust,
-and why recomputing removes it.
+A registry stores the relationship between an identifier and an item, so we must trust the registry to provide the correct information.
+
+A content-derived identifier is calculated directly from the item's content using SHA-256. Anyone with the content can calculate the identifier independently without a registry. This makes it easier to detect changes or fake content.
 
 ## What changes when the content changes
 
-The identifier changes with the content. Explain why that is a feature, because any substitution
-becomes detectable, and also a constraint, because you cannot keep one identifier while changing
-the content it points to.
+The identifier is linked to the content. If the content changes, its hash will also change with overwhelming probability. A second person can compare the newly calculated hash with the original identifier to detect substitution.
+
+The same content always produces the same identifier. If the content changes, it must be treated as a different item with a new identifier. Hash collisions are theoretically possible.
