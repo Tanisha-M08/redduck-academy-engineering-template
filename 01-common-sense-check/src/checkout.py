@@ -1,29 +1,50 @@
 # 01-common-sense-check/src/checkout.py
-# A minimal order service. Fix the flaw. No framework required.
+# A minimal order service. Plain Python, no framework.
+from dataclasses import dataclass
 
-# Product catalog.
+@dataclass
+class CatalogEntry:
+    name: str
+    price: int  # price in cents
+
+@dataclass
+class OrderItem:
+    product_id: str
+    quantity: int
+
+@dataclass
+class OrderRequest:
+    items: list
+
+@dataclass
+class Order:
+    id: str
+    items: list
+    total: int
+
+# Product catalog: the only source of prices.
 CATALOG = {
-    "sku-blue-tshirt": {"name": "Blue T-shirt", "price": 2000},  # price in cents
-    "sku-red-mug": {"name": "Red mug", "price": 900},
+    "sku-blue-tshirt": CatalogEntry("Blue T-shirt", 2000),
+    "sku-red-mug": CatalogEntry("Red mug", 900),
 }
 
 _orders = []
 
-
 def create_order(order_id, request):
-    """request = {"items": [{"productId": str, "quantity": int, "price": int}, ...]}.
-    Creates an order, stores it, and returns it."""
     total = 0
-    for item in request["items"]:
-        total += item["quantity"] * item["price"]
-    order = {"id": order_id, "items": request["items"], "total": total}
+    for item in request.items:
+        entry = CATALOG.get(item.product_id)
+        if entry is None:
+            raise ValueError(f"Unknown product: {item.product_id}")
+        if item.quantity <= 0:
+            raise ValueError(f"Quantity must be positive: {item.product_id}")
+        total += item.quantity * entry.price
+    order = Order(order_id, request.items, total)
     _orders.append(order)
     return order
 
-
 def get_order(order_id):
-    """Look up a stored order by its id."""
     for order in _orders:
-        if order["id"] == order_id:
+        if order.id == order_id:
             return order
     return None
