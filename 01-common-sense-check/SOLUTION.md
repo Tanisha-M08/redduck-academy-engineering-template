@@ -1,19 +1,15 @@
-# Solution
-
-## Language
-
-<!-- Keep only the language you completed. Delete the others so a single value is left, e.g. language: "python" -->
-language: "typescript" | "python" | "java" | "csharp"
-
-## The flaw
-
-Describe the flaw you found. Show how it can be exploited, as a short sequence of concrete steps.
+## The attack
+1. A customer picks the Blue T-shirt, which really costs 2000.
+2. They send an order with Price: 1 and Quantity: 1.
+3. The code multiplies the price they sent, so the total is 1.
+4. They get the T-shirt for 1 cent.
+Also, a negative quantity could lower the total.
 
 ## The fix
+The customer no longer sends a price. The code looks up the price in the
+Catalog. It also rejects unknown products and quantities of 0 or less.
 
-Explain what you changed and why the exploit no longer works.
-
-## Patch or elimination?
-
-Did your fix add a check that guards the input, or did it remove the condition that made the flaw
-possible? Say which one you did, and why removing the condition is stronger than guarding it.
+## Patched or removed?
+I removed the cause. A patch would compare the customer's price with the
+catalog price, but the customer could still send a price. I deleted the
+Price field, so there is nothing left to lie about.
